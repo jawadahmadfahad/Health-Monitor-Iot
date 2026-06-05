@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Monitoring System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        secondary: {
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, rgba(14,165,233,1) 0%, rgba(99,102,241,1) 100%);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #ffffff 0%, #6366f1 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .sensor-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .chart-container {
+            transition: all 0.3s ease;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+        .logo-icon {
+            background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            color: white;
+            font-size: 1.2rem;
+        }
+        .logo-text {
+            font-weight: 700;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .heart-beat {
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            25% { transform: scale(1.1); }
+            50% { transform: scale(1); }
+            75% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Navigation -->
+    <nav class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <span class="logo-text">HealthTrack Pro</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#overview" class="hover:text-primary-200 transition">Overview</a>
+                    <a href="#features" class="hover:text-primary-200 transition">Features</a>
+                    <a href="#demo" class="hover:text-primary-200 transition">Live Demo</a>
+                    <a href="#technology" class="hover:text-primary-200 transition">Technology</a>
+                    <a href="#contact" class="hover:text-primary-200 transition">Contact</a>
+                </div>
+                <button class="md:hidden focus:outline-none">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-20">
+        <div class="container mx-auto px-6 flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2 mb-10 md:mb-0">
+                <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-6">Real-Time Health Monitoring System</h1>
+                <p class="text-xl mb-8">Track heart rate and temperature with our advanced IoT solution. Get instant alerts and visualize your health data in real-time.</p>
+                <div class="flex space-x-4">
+                    <button class="bg-white text-primary-600 px-6 py-3 rounded-full font-semibold hover:bg-primary-100 transition transform hover:scale-105 shadow-lg">View Demo</button>
+                    <button class="border-2 border-white text-white px-6 py-3 rounded-full font-semibold hover:bg-primary-700 transition transform hover:scale-105">Learn More</button>
+                </div>
+            </div>
+            <div class="md:w-1/2 flex justify-center">
+                <div class="relative">
+                    <div class="absolute -top-10 -left-10 w-32 h-32 bg-primary-400 rounded-full opacity-20 animate-pulse"></div>
+                    <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-primary-400 rounded-full opacity-20 animate-pulse"></div>
+                    <div class="relative z-10 bg-white/20 backdrop-blur-sm rounded-xl p-8 shadow-2xl border border-white/10">
+                        <div class="flex justify-between items-center mb-6">
+                            <div class="bg-white/10 p-4 rounded-lg">
+                                <i class="fas fa-heartbeat text-3xl text-white heart-beat"></i>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm opacity-80">Current</p>
+                                <p class="text-2xl font-bold">72 <span class="text-sm">BPM</span></p>
+                            </div>
+                        </div>
+                        <div class="h-40 w-64 bg-white/5 rounded-lg p-4">
+                            <canvas id="miniChart"></canvas>
+                        </div>
+                        <div class="mt-4 flex justify-between">
+                            <div>
+                                <p class="text-sm opacity-80">Temperature</p>
+                                <p class="font-bold">26.5°C</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm opacity-80">Status</p>
+                                <p class="font-bold text-green-300">Normal</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Overview Section -->
+    <section id="overview" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="text-primary-600 font-semibold">HEALTH MONITORING</span>
+                <h2 class="text-3xl font-bold text-gray-800 mt-2">Project Overview</h2>
+                <div class="w-20 h-1 bg-gradient-to-r from-primary-500 to-secondary-500 mx-auto mt-4 rounded-full"></div>
+            </div>
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-10 md:mb-0">
+                    <div class="bg-gradient-to-br from-primary-50 to-primary-100 p-8 rounded-xl shadow-lg">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded-lg shadow-sm flex flex-col items-center">
+                                <div class="bg-primary-100 p-3 rounded-full mb-3">
+                                    <i class="fas fa-heartbeat text-primary-600"></i>
+                                </div>
+                                <h4 class="font-semibold text-gray-800 text-center">Heart Rate</h4>
+                                <p class="text-sm text-gray-600 text-center">BPM Monitoring</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm flex flex-col items-center">
+                                <div class="bg-primary-100 p-3 rounded-full mb-3">
+                                    <i class="fas fa-temperature-high text-primary-600"></i>
+                                </div>
+                                <h4 class="font-semibold text-gray-800 text-center">Temperature</h4>
+                                <p class="text-sm text-gray-600 text-center">°C Monitoring</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm flex flex-col items-center">
+                                <div class="bg-primary-100 p-3 rounded-full mb-3">
+                                    <i class="fas fa-wifi text-primary-600"></i>
+                                </div>
+                                <h4 class="font-semibold text-gray-800 text-center">WiFi</h4>
+                                <p class="text-sm text-gray-600 text-center">Data Transmission</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm flex flex-col items-center">
+                                <div class="bg-primary-100 p-3 rounded-full mb-3">
+                                    <i class="fas fa-chart-line text-primary-600"></i>
+                                </div>
+                                <h4 class="font-semibold text-gray-800 text-center">Dashboard</h4>
+                                <p class="text-sm text-gray-600 text-center">Real-time Charts</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="md:w-1/2 md:pl-12">
+                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">Comprehensive Health Tracking</h3>
+                    <p class="text-gray-600 mb-6">Our system provides real-time monitoring of vital health parameters including heart rate (BPM) and ambient temperature. The data is collected through IoT sensors, transmitted wirelessly, and visualized on a responsive web dashboard.</p>
+                    <div class="space-y-4">
+                        <div class="flex items-start bg-primary-50 p-4 rounded-lg transition hover:bg-primary-100">
+                            <div class="bg-primary-100 p-3 rounded-full mr-4">
+                                <i class="fas fa-heartbeat text-primary-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Heart Rate Monitoring</h4>
+                                <p class="text-gray-600">Accurate BPM measurement using pulse sensor technology with medical-grade precision.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start bg-primary-50 p-4 rounded-lg transition hover:bg-primary-100">
+                            <div class="bg-primary-100 p-3 rounded-full mr-4">
+                                <i class="fas fa-temperature-high text-primary-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Temperature Sensing</h4>
+                                <p class="text-gray-600">Precise ambient temperature readings with LM35 sensor (±0.5°C accuracy).</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start bg-primary-50 p-4 rounded-lg transition hover:bg-primary-100">
+                            <div class="bg-primary-100 p-3 rounded-full mr-4">
+                                <i class="fas fa-wifi text-primary-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Wireless Data Transmission</h4>
+                                <p class="text-gray-600">Real-time data transfer via WiFi using ESP8266 module with secure protocols.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="text-primary-600 font-semibold">KEY BENEFITS</span>
+                <h2 class="text-3xl font-bold text-gray-800 mt-2">Key Features</h2>
+                <div class="w-20 h-1 bg-gradient-to-r from-primary-500 to-secondary-500 mx-auto mt-4 rounded-full"></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition sensor-card group">
+                    <div class="bg-gradient-to-br from-primary-100 to-primary-200 w-16 h-16 rounded-full flex items-center justify-center mb-6 group-hover:from-primary-200 group-hover:to-primary-300 transition">
+                        <i class="fas fa-bolt text-primary-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Real-Time Monitoring</h3>
+                    <p class="text-gray-600">Get live updates of your health metrics with minimal latency, ensuring timely intervention when needed.</p>
+                    <div class="mt-4">
+                        <span class="inline-block bg-primary-100 text-primary-600 text-xs px-2 py-1 rounded-full">LIVE DATA</span>
+                    </div>
+                </div>
+                
+                <!-- Feature 2 -->
+                <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition sensor-card group">
+                    <div class="bg-gradient-to-br from-primary-100 to-primary-200 w-16 h-16 rounded-full flex items-center justify-center mb-6 group-hover:from-primary-200 group-hover:to-primary-300 transition">
+                        <i class="fas fa-chart-line text-primary-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Data Visualization</h3>
+                    <p class="text-gray-600">Interactive charts and graphs help you understand trends and patterns in your health data.</p>
+                    <div class="mt-4">
+                        <span class="inline-block bg-primary-100 text-primary-600 text-xs px-2 py-1 rounded-full">ANALYTICS</span>
+                    </div>
+                </div>
+                
+                <!-- Feature 3 -->
+                <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition sensor-card group">
+                    <div class="bg-gradient-to-br from-primary-100 to-primary-200 w-16 h-16 rounded-full flex items-center justify-center mb-6 group-hover:from-primary-200 group-hover:to-primary-300 transition">
+                        <i class="fas fa-bell text-primary-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Smart Alerts</h3>
+                    <p class="text-gray-600">Configure custom thresholds to receive notifications when your vitals go beyond safe limits.</p>
+                    <div class="mt-4">
+                        <span class="inline-block bg-primary-100 text-primary-600 text-xs px-2 py-1 rounded-full">ALERTS</span>
+                    </div>
+                </div>
+                
+                <!-- Feature 4 -->
+                <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition sensor-card group">
+                    <div class="bg-gradient-to-br from-primary-100 to-primary-200 w-16 h-16 rounded-full flex items-center justify-center mb-6 group-hover:from-primary-200 group-hover:to-primary-300 transition">
+                        <i class="fas fa-mobile-alt text-primary-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Responsive Design</h3>
+                    <p class="text-gray-600">Access your health dashboard from any device - desktop, tablet, or smartphone.</p>
+                    <div class="mt-4">
+                        <span class="inline-block bg-primary-100 text-primary-600 text-xs px-2 py-1 rounded-full">MOBILE</span>
+                    </div>
+                </div>
+                
+                <!-- Feature 5 -->
+                <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition sensor-card group">
+                    <div class="bg-gradient-to-br from-primary-100 to-primary-200 w-16 h-16 rounded-full flex items-center justify-center mb-6 group-hover:from-primary-200 group-hover:to-primary-300 transition">
+                        <i class="fas fa-database text-primary-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Data Storage</h3>
+                    <p class="text-gray-600">Historical data storage allows for long-term health tracking and analysis.</p>
+                    <div class="mt-4">
+                        <span class="inline-block bg-primary-100 text-primary-600 text-xs px-2 py-1 rounded-full">STORAGE</span>
+                    </div>
+                </div>
+                
+                <!-- Feature 6 -->
+                <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition sensor-card group">
+                    <div class="bg-gradient-to-br from-primary-100 to-primary-200 w-16 h-16 rounded-full flex items-center justify-center mb-6 group-hover:from-primary-200 group-hover:to-primary-300 transition">
+                        <i class="fas fa-expand-arrows-alt text-primary-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Scalable Architecture</h3>
+                    <p class="text-gray-600">Easily add more sensors and features to the system as your needs grow.</p>
+                    <div class="mt-4">
+                        <span class="inline-block bg-primary-100 text-primary-600 text-xs px-2 py-1 rounded-full">FLEXIBLE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Demo Section -->
+    <section id="demo" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="text-primary-600 font-semibold">INTERACTIVE DEMO</span>
+                <h2 class="text-3xl font-bold text-gray-800 mt-2">Live Demo</h2>
+                <div class="w-20 h-1 bg-gradient-to-r from-primary-500 to-secondary-500 mx-auto mt-4 rounded-full"></div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Live Data Display -->
+                <div class="lg:col-span-2 bg-gradient-to-br from-primary-50 to-white p-6 rounded-xl shadow-lg">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-semibold text-gray-800">Real-Time Health Metrics</h3>
+                        <div class="flex items-center">
+                            <span class="h-3 w-3 bg-green-500 rounded-full mr-2"></span>
+                            <span class="text-sm text-gray-600">Live Data</span>
+                        </div>
+                    </div>
+                    <div class="chart-container bg-white p-4 rounded-lg shadow-sm">
+                        <canvas id="healthChart"></canvas>
+                    </div>
+                    <div class="mt-4 flex justify-between">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-primary-600 rounded-full mr-2"></div>
+                            <span class="text-sm text-gray-600">Heart Rate (BPM)</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                            <span class="text-sm text-gray-600">Temperature (°C)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Current Readings -->
+                <div class="space-y-6">
+                    <div class="bg-gradient-to-br from-primary-50 to-white p-6 rounded-xl shadow-lg">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-semibold text-gray-800">Heart Rate</h4>
+                            <div class="bg-primary-100 p-2 rounded-full">
+                                <i class="fas fa-heartbeat text-primary-600"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-end">
+                            <span id="bpmValue" class="text-4xl font-bold text-gray-800 mr-2">72</span>
+                            <span class="text-gray-500 mb-1">BPM</span>
+                        </div>
+                        <div class="mt-4">
+                            <div class="h-2 bg-primary-200 rounded-full overflow-hidden">
+                                <div id="bpmBar" class="h-full bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full" style="width: 60%"></div>
+                            </div>
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>40</span>
+                                <span>120</span>
+                            </div>
+                        </div>
+                        <p id="bpmStatus" class="text-sm text-green-600 mt-2">Normal</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-green-50 to-white p-6 rounded-xl shadow-lg">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-semibold text-gray-800">Temperature</h4>
+                            <div class="bg-green-100 p-2 rounded-full">
+                                <i class="fas fa-temperature-high text-green-600"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-end">
+                            <span id="tempValue" class="text-4xl font-bold text-gray-800 mr-2">26.5</span>
+                            <span class="text-gray-500 mb-1">°C</span>
+                        </div>
+                        <div class="mt-4">
+                            <div class="h-2 bg-green-200 rounded-full overflow-hidden">
+                                <div id="tempBar" class="h-full bg-gradient-to-r from-green-500 to-teal-500 rounded-full" style="width: 50%"></div>
+                            </div>
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>15</span>
+                                <span>40</span>
+                            </div>
+                        </div>
+                        <p id="tempStatus" class="text-sm text-green-600 mt-2">Comfortable</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-yellow-50 to-white p-6 rounded-xl shadow-lg">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-semibold text-gray-800">System Status</h4>
+                            <div class="bg-yellow-100 p-2 rounded-full">
+                                <i class="fas fa-wifi text-yellow-600"></i>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Connection:</span>
+                                <span id="connectionStatus" class="font-medium text-green-600">Active</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Last Update:</span>
+                                <span id="lastUpdate" class="font-medium text-gray-800">Just now</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Data Points:</span>
+                                <span id="dataPoints" class="font-medium text-gray-800">127</span>
+                            </div>
+                            <div class="pt-3">
+                                <button id="connectBtn" class="w-full bg-primary-600 text-white py-2 rounded-lg font-semibold hover:bg-primary-700 transition">Connect Device</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Stack Section -->
+    <section id="technology" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="text-primary-600 font-semibold">TECHNOLOGY</span>
+                <h2 class="text-3xl font-bold text-gray-800 mt-2">Technology Stack</h2>
+                <div class="w-20 h-1 bg-gradient-to-r from-primary-500 to-secondary-500 mx-auto mt-4 rounded-full"></div>
+            </div>
+            
+            <div class="flex flex-col md:flex-row">
+                <!-- Hardware -->
+                <div class="md:w-1/3 mb-10 md:mb-0 md:pr-6">
+                    <div class="bg-white p-8 rounded-xl shadow-md h-full">
+                        <div class="text-center mb-6">
+                            <div class="bg-gradient-to-br from-primary-100 to-primary-200 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-microchip text-primary-600 text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-800">Hardware Components</h3>
+                        </div>
+                        <ul class="space-y-4">
+                            <li class="flex items-start bg-primary-50 p-4 rounded-lg transition hover:bg-primary-100">
+                                <div class="bg-primary-100 p-2 rounded-full mr-4">
+                                    <i class="fas fa-microchip text-primary-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">Arduino Uno/Nano</h4>
+                                    <p class="text-gray-600">Microcontroller for sensor data processing</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start bg-primary-50 p-4 rounded-lg transition hover:bg-primary-100">
+                                <div class="bg-primary-100 p-2 rounded-full mr-4">
+                                    <i class="fas fa-heart text-primary-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">Pulse Sensor Amped</h4>
+                                    <p class="text-gray-600">Heartbeat detection (BPM measurement)</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start bg-primary-50 p-4 rounded-lg transition hover:bg-primary-100">
+                                <div class="bg-primary-100 p-2 rounded-full mr-4">
+                                    <i class="fas fa-thermometer-half text-primary-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">LM35/TMP36</h4>
+                                    <p class="text-gray-600">Precision temperature sensor</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start bg-primary-50 p-4 rounded-lg transition hover:bg-primary-100">
+                                <div class="bg-primary-100 p-2 rounded-full mr-4">
+                                    <i class="fas fa-wifi text-primary-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">ESP8266/ESP32</h4>
+                                    <p class="text-gray-600">WiFi module for wireless communication</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Backend -->
+                <div class="md:w-1/3 mb-10 md:mb-0 md:px-6">
+                    <div class="bg-white p-8 rounded-xl shadow-md h-full">
+                        <div class="text-center mb-6">
+                            <div class="bg-gradient-to-br from-green-100 to-green-200 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-server text-green-600 text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-800">Backend</h3>
+                        </div>
+                        <ul class="space-y-4">
+                            <li class="flex items-start bg-green-50 p-4 rounded-lg transition hover:bg-green-100">
+                                <div class="bg-green-100 p-2 rounded-full mr-4">
+                                    <i class="fab fa-python text-green-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">Flask</h4>
+                                    <p class="text-gray-600">Lightweight Python web framework</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start bg-green-50 p-4 rounded-lg transition hover:bg-green-100">
+                                <div class="bg-green-100 p-2 rounded-full mr-4">
+                                    <i class="fas fa-database text-green-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">SQLite/MongoDB</h4>
+                                    <p class="text-gray-600">Data storage solutions</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start bg-green-50 p-4 rounded-lg transition hover:bg-green-100">
+                                <div class="bg-green-100 p-2 rounded-full mr-4">
+                                    <i class="fas fa-exchange-alt text-green-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">REST API</h4>
+                                    <p class="text-gray-600">Standardized data exchange</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start bg-green-50 p-4 rounded-lg transition hover:bg-green-100">
+                                <div class="bg-green-100 p-2 rounded-full mr-4">
+                                    <i class="fas fa-shield-alt text-green-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">Authentication</h4>
+                                    <p class="text-gray-600">Secure data access</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Frontend -->
+                <div class="md:w-1/3 md:pl-6">
+                    <div class="bg-white p-8 rounded-xl shadow-md h-full">
+                        <div class="text-center mb-6">
+                            <div class="bg-gradient-to-br from-purple-100 to-purple-200 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-desktop text-purple-600 text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-800">Frontend</h3>
+                        </div>
+                        <ul class="space-y-4">
+                            <li class="flex items-start bg-purple-50 p-4 rounded-lg transition hover:bg-purple-100">
+                                <div class="bg-purple-100 p-2 rounded-full mr-4">
+                                    <i class="fab fa-react text-purple-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">React</h4>
+                                    <p class="text-gray-600">Interactive user interface</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start bg-purple-50 p-4 rounded-lg transition hover:bg-purple-100">
+                                <div class="bg-purple-100 p-2 rounded-full mr-4">
+                                    <i class="fab fa-js text-purple-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">Chart.js</h4>
+                                    <p class="text-gray-600">Data visualization</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start bg-purple-50 p-4 rounded-lg transition hover:bg-purple-100">
+                                <div class="bg-purple-100 p-2 rounded-full mr-4">
+                                    <i class="fab fa-css3-alt text-purple-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">Tailwind CSS</h4>
+                                    <p class="text-gray-600">Responsive design framework</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start bg-purple-50 p-4 rounded-lg transition hover:bg-purple-100">
+                                <div class="bg-purple-100 p-2 rounded-full mr-4">
+                                    <i class="fas fa-mobile-alt text-purple-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">Responsive</h4>
+                                    <p class="text-gray-600">Works on all devices</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Future Enhancements -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="text-primary-600 font-semibold">ROADMAP</span>
+                <h2 class="text-3xl font-bold text-gray-800 mt-2">Future Enhancements</h2>
+                <div class="w-20 h-1 bg-gradient-to-r from-primary-500 to-secondary-500 mx-auto mt-4 rounded-full"></div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-indigo-50 p-8 rounded-xl shadow-md hover:shadow-lg transition group">
+                    <div class="flex items-center mb-6">
+                        <div class="bg-gradient-to-br from-indigo-100 to-indigo-200 p-3 rounded-full mr-4 group-hover:from-indigo-200 group-hover:to-indigo-300 transition">
+                            <i class="fas fa-lungs text-indigo-600 text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">SpO2 Monitoring</h3>
+                    </div>
+                    <p class="text-gray-600">Integration of pulse oximetry to measure blood oxygen saturation levels, providing more comprehensive health monitoring.</p>
+                    <div class="mt-4">
+                        <span class="inline-block bg-indigo-100 text-indigo-600 text-xs px-2 py-1 rounded-full">COMING SOON</span>
+                    </div>
+                </div>
+                
+                <div class="bg-pink-50 p-8 rounded-xl shadow-md hover:shadow-lg transition group">
+                    <div class="flex items-center mb-6">
+                        <div class="bg-gradient-to-br from-pink-100 to-pink-200 p-3 rounded-full mr-4 group-hover:from-pink-200 group-hover:to-pink-300 transition">
+                            <i class="fas fa-running text-pink-600 text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">Activity Tracking</h3>
+                    </div>
+                    <p class="text-gray-600">Add accelerometer and gyroscope sensors to monitor physical activity and sleep patterns.</p>
+                    <div class="mt-4">
+                        <span class="inline-block bg-pink-100 text-pink-600 text-xs px-2 py-1 rounded-full">IN DEVELOPMENT</span>
+                    </div>
+                </div>
+                
+                <div class="bg-teal-50 p-8 rounded-xl shadow-md hover:shadow-lg transition group">
+                    <div class="flex items-center mb-6">
+                        <div class="bg-gradient-to-br from-teal-100 to-teal-200 p-3 rounded-full mr-4 group-hover:from-teal-200 group-hover:to-teal-300 transition">
+                            <i class="fas fa-users text-teal-600 text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">Multi-User Support</h3>
+                    </div>
+                    <p class="text-gray-600">Implement user authentication and profiles to support multiple individuals using the same system.</p>
+                    <div class="mt-4">
+                        <span class="inline-block bg-teal-100 text-teal-600 text-xs px-2 py-1 rounded-full">PLANNED</span>
+                    </div>
+                </div>
+                
+                <div class="bg-orange-50 p-8 rounded-xl shadow-md hover:shadow-lg transition group">
+                    <div class="flex items-center mb-6">
+                        <div class="bg-gradient-to-br from-orange-100 to-orange-200 p-3 rounded-full mr-4 group-hover:from-orange-200 group-hover:to-orange-300 transition">
+                            <i class="fas fa-cloud text-orange-600 text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">Cloud Integration</h3>
+                    </div>
+                    <p class="text-gray-600">Migrate to cloud-based storage and processing for better scalability and remote access capabilities.</p>
+                    <div class="mt-4">
+                        <span class="inline-block bg-orange-100 text-orange-600 text-xs px-2 py-1 rounded-full">NEXT PHASE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="text-primary-600 font-semibold">GET IN TOUCH</span>
+                <h2 class="text-3xl font-bold text-gray-800 mt-2">Contact Us</h2>
+                <div class="w-20 h-1 bg-gradient-to-r from-primary-500 to-secondary-500 mx-auto mt-4 rounded-full"></div>
+            </div>
+            
+            <div class="flex flex-col md:flex-row">
+                <div class="md:w-1/2 mb-10 md:mb-0 md:pr-10">
+                    <h3 class="text-xl font-semibold mb-6 text-gray-800">Contact Information</h3>
+                    <div class="space-y-6">
+                        <div class="flex items-start bg-white p-4 rounded-lg shadow-sm">
+                            <div class="bg-primary-100 p-3 rounded-full mr-4">
+                                <i class="fas fa-envelope text-primary-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Email</h4>
+                                <p class="text-gray-600">healthtrack@example.com</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start bg-white p-4 rounded-lg shadow-sm">
+                            <div class="bg-primary-100 p-3 rounded-full mr-4">
+                                <i class="fas fa-phone-alt text-primary-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Phone</h4>
+                                <p class="text-gray-600">+1 (555) 123-4567</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start bg-white p-4 rounded-lg shadow-sm">
+                            <div class="bg-primary-100 p-3 rounded-full mr-4">
+                                <i class="fas fa-map-marker-alt text-primary-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Address</h4>
+                                <p class="text-gray-600">123 Tech Park, Innovation City, CA 94000</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-10">
+                        <h3 class="text-xl font-semibold mb-6 text-gray-800">Follow Us</h3>
+                        <div class="flex space-x-4">
+                            <a href="#" class="bg-primary-100 p-3 rounded-full text-primary-600 hover:bg-primary-200 transition transform hover:scale-110">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="#" class="bg-primary-100 p-3 rounded-full text-primary-600 hover:bg-primary-200 transition transform hover:scale-110">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="bg-primary-100 p-3 rounded-full text-primary-600 hover:bg-primary-200 transition transform hover:scale-110">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                            <a href="#" class="bg-primary-100 p-3 rounded-full text-primary-600 hover:bg-primary-200 transition transform hover:scale-110">
+                                <i class="fab fa-github"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="md:w-1/2">
+                    <div class="bg-white p-8 rounded-xl shadow-md">
+                        <h3 class="text-xl font-semibold mb-6 text-gray-800">Send Us a Message</h3>
+                        <form>
+                            <div class="mb-6">
+                                <label for="name" class="block text-gray-700 mb-2">Your Name</label>
+                                <input type="text" id="name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                            </div>
+                            <div class="mb-6">
+                                <label for="email" class="block text-gray-700 mb-2">Email Address</label>
+                                <input type="email" id="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                            </div>
+                            <div class="mb-6">
+                                <label for="subject" class="block text-gray-700 mb-2">Subject</label>
+                                <input type="text" id="subject" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                            </div>
+                            <div class="mb-6">
+                                <label for="message" class="block text-gray-700 mb-2">Message</label>
+                                <textarea id="message" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-gradient-to-r from-primary-500 to-secondary-500 text-white py-3 rounded-lg font-semibold hover:from-primary-600 hover:to-secondary-600 transition shadow-lg transform hover:scale-105">Send Message</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="gradient-bg text-white py-10">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <div class="logo">
+                        <div class="logo-icon">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
+                        <span class="logo-text">HealthTrack Pro</span>
+                    </div>
+                    <p class="mt-2 text-primary-200">Real-time health monitoring for a better life.</p>
+                </div>
+                <div class="flex flex-col md:flex-row md:space-x-10 space-y-4 md:space-y-0">
+                    <div>
+                        <h4 class="font-semibold mb-3">Quick Links</h4>
+                        <ul class="space-y-2">
+                            <li><a href="#overview" class="hover:text-primary-200 transition">Overview</a></li>
+                            <li><a href="#features" class="hover:text-primary-200 transition">Features</a></li>
+                            <li><a href="#demo" class="hover:text-primary-200 transition">Demo</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-3">Resources</h4>
+                        <ul class="space-y-2">
+                            <li><a href="#" class="hover:text-primary-200 transition">Documentation</a></li>
+                            <li><a href="#" class="hover:text-primary-200 transition">GitHub</a></li>
+                            <li><a href="#" class="hover:text-primary-200 transition">API Reference</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-3">Legal</h4>
+                        <ul class="space-y-2">
+                            <li><a href="#" class="hover:text-primary-200 transition">Privacy Policy</a></li>
+                            <li><a href="#" class="hover:text-primary-200 transition">Terms of Service</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-primary-400 mt-8 pt-8 text-center text-primary-200">
+                <p>&copy; 2023 HealthTrack Pro. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize mini chart in hero section
+        const miniCtx = document.getElementById('miniChart').getContext('2d');
+        const miniChart = new Chart(miniCtx, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: 10}, (_, i) => i),
+                datasets: [{
+                    data: [72, 71, 73, 72, 74, 73, 72, 71, 72, 73],
+                    borderColor: 'rgba(99, 102, 241, 1)',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        display: false
+                    },
+                    y: {
+                        display: false,
+                        min: 65,
+                        max: 75
+                    }
+                }
+            }
+        });
+
+        // Simulate live data for the demo
+        function generateRandomData(count) {
+            const data = [];
+            const now = Date.now();
+            let lastBpm = 72;
+            let lastTemp = 26.5;
+            
+            for (let i = 0; i < count; i++) {
+                const time = new Date(now - (count - i) * 1000);
+                
+                // Simulate realistic BPM changes
+                let bpmChange = Math.random() * 4 - 2; // -2 to +2
+                if (Math.random() > 0.9) bpmChange = Math.random() * 10 - 5; // occasional bigger change
+                lastBpm = Math.max(40, Math.min(120, lastBpm + bpmChange));
+                
+                // Simulate realistic temperature changes
+                let tempChange = Math.random() * 0.4 - 0.2; // -0.2 to +0.2
+                if (Math.random() > 0.95) tempChange = Math.random() * 2 - 1; // occasional bigger change
+                lastTemp = Math.max(15, Math.min(40, lastTemp + tempChange));
+                
+                data.push({
+                    time: time,
+                    bpm: Math.round(lastBpm),
+                    temp: parseFloat(lastTemp.toFixed(1))
+                });
+            }
+            
+            return data;
+        }
+
+        // Initialize chart
+        const ctx = document.getElementById('healthChart').getContext('2d');
+        const initialData = generateRandomData(30);
+        
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [
+                    {
+                        label: 'Heart Rate (BPM)',
+                        data: initialData.map(d => ({x: d.time, y: d.bpm})),
+                        borderColor: 'rgb(99, 102, 241)',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Temperature (°C)',
+                        data: initialData.map(d => ({x: d.time, y: d.temp})),
+                        borderColor: 'rgb(16, 185, 129)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'second',
+                            displayFormats: {
+                                second: 'HH:mm:ss'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Heart Rate (BPM)'
+                        },
+                        min: 40,
+                        max: 120
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Temperature (°C)'
+                        },
+                        min: 15,
+                        max: 40,
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Update data every second
+        setInterval(() => {
+            const newData = generateRandomData(1)[0];
+            
+            // Update chart
+            chart.data.datasets[0].data.push({x: newData.time, y: newData.bpm});
+            chart.data.datasets[1].data.push({x: newData.time, y: newData.temp});
+            
+            if (chart.data.datasets[0].data.length > 60) {
+                chart.data.datasets[0].data.shift();
+                chart.data.datasets[1].data.shift();
+            }
+            
+            chart.update();
+            
+            // Update display values
+            document.getElementById('bpmValue').textContent = newData.bpm;
+            document.getElementById('tempValue').textContent = newData.temp.toFixed(1);
+            
+            // Update progress bars
+            const bpmPercent = ((newData.bpm - 40) / 80) * 100;
+            document.getElementById('bpmBar').style.width = `${bpmPercent}%`;
+            
+            const tempPercent = ((newData.temp - 15) / 25) * 100;
+            document.getElementById('tempBar').style.width = `${tempPercent}%`;
+            
+            // Update status indicators
+            const bpmStatus = document.getElementById('bpmStatus');
+            if (newData.bpm < 60) {
+                bpmStatus.textContent = 'Low';
+                bpmStatus.className = 'text-sm text-blue-600 mt-2';
+            } else if (newData.bpm > 100) {
+                bpmStatus.textContent = 'High';
+                bpmStatus.className = 'text-sm text-red-600 mt-2';
+            } else {
+                bpmStatus.textContent = 'Normal';
+                bpmStatus.className = 'text-sm text-green-600 mt-2';
+            }
+            
+            const tempStatus = document.getElementById('tempStatus');
+            if (newData.temp < 20) {
+                tempStatus.textContent = 'Cold';
+                tempStatus.className = 'text-sm text-blue-600 mt-2';
+            } else if (newData.temp > 30) {
+                tempStatus.textContent = 'Hot';
+                tempStatus.className = 'text-sm text-red-600 mt-2';
+            } else {
+                tempStatus.textContent = 'Comfortable';
+                tempStatus.className = 'text-sm text-green-600 mt-2';
+            }
+            
+            // Update last update time
+            document.getElementById('lastUpdate').textContent = 'Just now';
+            document.getElementById('dataPoints').textContent = chart.data.datasets[0].data.length;
+            
+        }, 1000);
+
+        // Connect button animation
+        const connectBtn = document.getElementById('connectBtn');
+        connectBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const status = document.getElementById('connectionStatus');
+            
+            connectBtn.textContent = 'Connecting...';
+            connectBtn.classList.add('opacity-75');
+            
+            setTimeout(() => {
+                connectBtn.textContent = 'Connected';
+                connectBtn.classList.remove('bg-primary-600', 'hover:bg-primary-700');
+                connectBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+                status.textContent = 'Connected';
+                status.className = 'font-medium text-green-600';
+            }, 1500);
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
