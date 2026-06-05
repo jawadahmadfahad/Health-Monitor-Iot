@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { connectToArduino, disconnectFromArduino } from '../services/arduinoService';
+import { fetchReadingsFromD1, isD1Configured, saveReadingToD1 } from '../services/d1Service';
 
 export interface SensorData {
   heartRate: number;
@@ -45,14 +46,73 @@ export const SensorDataProvider: React.FC<SensorDataProviderProps> = ({ children
   const [currentData, setCurrentData] = useState<SensorData | null>(null);
   const [historicalData, setHistoricalData] = useState<SensorData[]>([]);
   const [isConnected, setIsConnected] = useState(false);
+  const [useSimulation, setUseSimulation] = useState(() => !isD1Configured());
   const [thresholds, setThresholds] = useState({
     heartRate: { min: 60, max: 100 },
     temperature: { min: 21, max: 29 },
   });
 
+  // If D1 is configured, try to hydrate recent readings on load.
+  useEffect(() => {
+    let cancelled = false;
+
+    const hydrate = async () => {
+      if (!isD1Configured()) return;
+
+      try {
+        const readings = await fetchReadingsFromD1(100);
+        if (cancelled) return;
+
+        if (readings.length === 0) {
+          setUseSimulation(true);
+          return;
+        }
+
+        // API returns newest-first; store oldest-first for charts.
+        const normalized = readings
+          .slice()
+          .reverse()
+          .map((r) => {
+            const heartRateStatus =
+              r.heartRate < thresholds.heartRate.min ? 'low' :
+              r.heartRate > thresholds.heartRate.max ? 'high' : 'normal';
+
+            const temperatureStatus =
+              r.temperature < thresholds.temperature.min ? 'low' :
+              r.temperature > thresholds.temperature.max ? 'high' : 'normal';
+
+            return {
+              heartRate: r.heartRate,
+              temperature: r.temperature,
+              timestamp: new Date(r.ts),
+              status: {
+                heartRate: heartRateStatus,
+                temperature: temperatureStatus,
+              },
+            } as SensorData;
+          });
+
+        setHistoricalData(normalized);
+        setCurrentData(normalized[normalized.length - 1] ?? null);
+        setUseSimulation(false);
+      } catch (error) {
+        console.error('Failed to hydrate from D1:', error);
+        setUseSimulation(true);
+      }
+    };
+
+    hydrate();
+
+    return () => {
+      cancelled = true;
+    };
+    // thresholds used for status computation; re-hydration on change is not required.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Simulate initial data for development
   useEffect(() => {
-    if (!isConnected) {
+    if (!isConnected && useSimulation) {
       const intervalId = setInterval(() => {
         const newData = generateRandomData();
         setCurrentData(newData);
@@ -68,7 +128,7 @@ export const SensorDataProvider: React.FC<SensorDataProviderProps> = ({ children
 
       return () => clearInterval(intervalId);
     }
-  }, [isConnected]);
+  }, [isConnected, useSimulation]);
 
   const generateRandomData = (): SensorData => {
     const lastHeartRate = currentData?.heartRate || 72;
@@ -134,9 +194,18 @@ export const SensorDataProvider: React.FC<SensorDataProviderProps> = ({ children
             }
             return newHistory;
           });
+
+          // Persist to D1 (best-effort)
+          saveReadingToD1({
+            heartRate,
+            temperature,
+            ts: Date.now(),
+            source: 'ws',
+          }).catch((e) => console.error('Failed to save reading to D1:', e));
         }
       );
       setIsConnected(true);
+      setUseSimulation(false);
     } catch (error) {
       console.error('Failed to connect to Arduino:', error);
       setIsConnected(false);

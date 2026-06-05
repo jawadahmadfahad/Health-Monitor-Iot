@@ -191,8 +191,8 @@ const ArduinoSetup = () => {
             </div>
             
             <p className="text-sm text-gray-500 mt-4">
-              This code creates a WebSocket server on your Arduino that sends heart rate and temperature data to any connected clients.
-              Make sure to update the WiFi credentials before uploading.
+              In this project, the Arduino reads sensors and sends comma-separated values over Serial.
+              The NodeMCU (ESP8266) runs the WebSocket server and broadcasts the readings to the web app.
             </p>
           </div>
         </div>

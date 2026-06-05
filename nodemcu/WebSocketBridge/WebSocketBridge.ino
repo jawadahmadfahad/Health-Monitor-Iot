@@ -4,8 +4,8 @@
 #include <ArduinoJson.h>
 
 /* WiFi Credentials */
-const char* ssid = "PTCL-BB";
-const char* password = "92b5bf4e";
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
 
 /* SoftwareSerial Setup (D1 = GPIO5 = RX from Arduino, D2 = GPIO4 = TX to Arduino) */
 SoftwareSerial arduinoSerial(D1, D2); // RX, TX

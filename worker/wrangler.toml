@@ -1,0 +1,14 @@
+name = "health-monitor-d1"
+main = "src/index.ts"
+compatibility_date = "2026-06-05"
+
+# D1 binding: Dashboard -> D1 -> sensordata
+[[d1_databases]]
+binding = "DB"
+database_name = "sensordata"
+database_id = "ac70e192-213f-48ae-94b4-901815ca9887"
+
+[vars]
+# Optional: set to a specific origin (e.g. https://your-site.pages.dev)
+# If empty, the worker reflects the request Origin.
+ALLOWED_ORIGIN = ""

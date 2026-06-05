@@ -1,22 +1,23 @@
-#include <ESP8266WiFi.h>
-#include <WebSocketsServer.h>
-#include <ArduinoJson.h>
-#include <TimerOne.h>
 #include <LiquidCrystal.h>
 
-/* WiFi credentials */
-const char* ssid = "YourWiFiName";
-const char* password = "YourWiFiPassword";
+/*
+  Arduino UNO/Nano sketch:
+  - Reads pulse sensor on D7 (digital) and LM35 on A0
+  - Updates a 16x2 LCD
+  - Streams data to NodeMCU over Serial as: bpm,tempC\n
 
-/* WebSocket server */
-WebSocketsServer webSocket = WebSocketsServer(8080);
+  NodeMCU (ESP8266) side uses SoftwareSerial(D1, D2) at 9600
+  - NodeMCU D1 (GPIO5)  <= Arduino TX (D1)  (use level shifting / resistor divider!)
+  - NodeMCU D2 (GPIO4)  => Arduino RX (D0)  (optional; not used in this project)
+  - Common GND required
+*/
 
-/* LCD wiring */
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2); // RS=12, E=11, D4=5, D5=4, D6=3, D7=2
+/* LCD wiring (UNO pins): RS=12, E=11, D4=5, D5=4, D6=3, D7=2 */
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
 /* Pins */
-const byte TEMP_PIN = A0;  // LM35 temp sensor analog input
-const byte HB_SENSOR = 7;  // Pulse sensor digital input
+const uint8_t TEMP_PIN = A0;  // LM35 temp sensor analog input
+const uint8_t HB_SENSOR = 7;  // Pulse sensor digital input
 
 /* Custom chars */
 byte heartGlyph[8] = {
@@ -41,118 +42,82 @@ byte tempGlyph[8] = {
   0b00000
 };
 
-/* Pulse detection variables */
-const int Highpulse = HIGH;  // since digitalRead, HIGH means pulse detected
-unsigned long lastBeatTime = 0;
-unsigned long lastBPMUpdate = 0;
+/* Measurement state */
+unsigned long lastBpmWindowStartMs = 0;
+unsigned long lastTempSampleMs = 0;
+
 int beatCount = 0;
 int bpm = 0;
-
-unsigned long lastTempUpdate = 0;
-int temp = 0;
-
-/* WebSocket event handler */
-void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
-  switch(type) {
-    case WStype_DISCONNECTED:
-      Serial.printf("[%u] Disconnected!\n", num);
-      break;
-    case WStype_CONNECTED:
-      {
-        IPAddress ip = webSocket.remoteIP(num);
-        Serial.printf("[%u] Connected from %d.%d.%d.%d\n", num, ip[0], ip[1], ip[2], ip[3]);
-      }
-      break;
-    case WStype_TEXT:
-      Serial.printf("[%u] get Text: %s\n", num, payload);
-      break;
-  }
-}
+float tempC = 0.0f;
 
 void setup() {
-  Serial.begin(115200);
-  
-  // Connect to WiFi
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  
-  // Start WebSocket server
-  webSocket.begin();
-  webSocket.onEvent(webSocketEvent);
-  
-  // LCD Setup
+  // Must match NodeMCU SoftwareSerial baud
+  Serial.begin(9600);
+
+  pinMode(HB_SENSOR, INPUT);
+
   lcd.begin(16, 2);
   lcd.createChar(0, heartGlyph);
   lcd.createChar(1, tempGlyph);
-  pinMode(HB_SENSOR, INPUT);
 
-  // Splash screen
   lcd.setCursor(3, 0);
   lcd.print("Health");
   lcd.setCursor(2, 1);
   lcd.print("Monitoring");
-  delay(2000);
+  delay(1500);
   lcd.clear();
+
+  lastBpmWindowStartMs = millis();
+  lastTempSampleMs = millis();
+}
+
+static float readLm35TempC() {
+  const int adc = analogRead(TEMP_PIN);
+  const float voltage = adc * (5.0f / 1023.0f);
+  return voltage * 100.0f; // LM35: 10mV/°C
 }
 
 void loop() {
-  webSocket.loop();
-  unsigned long currentMillis = millis();
+  const unsigned long now = millis();
 
-  // Read temperature every 2 seconds
-  if (currentMillis - lastTempUpdate >= 2000) {
-    int adc = analogRead(TEMP_PIN);
-    float voltage = adc * (5.0 / 1023.0);
-    temp = voltage * 100; // LM35: 10mV/°C
-    lastTempUpdate = currentMillis;
-    
-    // Send data to WebSocket clients
-    StaticJsonDocument<200> doc;
-    doc["heartRate"] = bpm;
-    doc["temperature"] = temp;
-    
-    String jsonString;
-    serializeJson(doc, jsonString);
-    webSocket.broadcastTXT(jsonString);
+  // Temperature sample every 2 seconds
+  if (now - lastTempSampleMs >= 2000) {
+    tempC = readLm35TempC();
+    lastTempSampleMs = now;
   }
 
-  // Pulse detection: detect rising edge on digital pin 7
-  int pulseVal = digitalRead(HB_SENSOR);
-  static bool pulsePrevState = LOW;
-
-  if (pulseVal == HIGH && pulsePrevState == LOW) {
-    // Rising edge detected: count beat
+  // Pulse detection: count rising edges on digital pin
+  const int pulseVal = digitalRead(HB_SENSOR);
+  static int prevPulseVal = LOW;
+  if (pulseVal == HIGH && prevPulseVal == LOW) {
     beatCount++;
-    lastBeatTime = currentMillis;
   }
-  pulsePrevState = pulseVal;
+  prevPulseVal = pulseVal;
 
-  // Update BPM every 10 seconds (or 60000 ms for 1 min scale)
-  if (currentMillis - lastBPMUpdate >= 10000) {
-    bpm = beatCount * 6; // scale 10s count to 60s
+  // BPM update window: 10 seconds => multiply by 6 to get BPM
+  if (now - lastBpmWindowStartMs >= 10000) {
+    bpm = beatCount * 6;
     beatCount = 0;
-    lastBPMUpdate = currentMillis;
+    lastBpmWindowStartMs = now;
+
+    // Emit one line for NodeMCU: "bpm,tempC\n"
+    Serial.print(bpm);
+    Serial.print(',');
+    Serial.println(tempC, 1);
   }
 
-  // Display on LCD
+  // LCD output
   lcd.setCursor(0, 0);
-  lcd.write(byte(1));           // Temp glyph
+  lcd.write(byte(1));
   lcd.print(" Temp: ");
-  lcd.print(temp);
-  lcd.print(" C  ");
+  lcd.print(tempC, 1);
+  lcd.print(" C ");
 
   lcd.setCursor(0, 1);
-  lcd.write(byte(0));           // Heart glyph
+  lcd.write(byte(0));
   lcd.print(" BPM: ");
   lcd.print(bpm);
-  lcd.print("    ");
+  lcd.print("     ");
 
-  delay(50);
+  delay(25);
 }
